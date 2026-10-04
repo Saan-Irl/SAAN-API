@@ -101,6 +101,53 @@ app.get("/api/translate", async (req, res) => {
 // ===============================
 // START SERVER
 // ===============================
+
+/* ===============================
+   IMAGE FILTER
+   =============================== */
+app.get("/filter", async (req, res) => {
+  try {
+    const { image_url, filter_type } = req.query;
+
+    if (!image_url || !filter_type) {
+      return res.status(400).json({
+        status: false,
+        message: "image_url and filter_type are required."
+      });
+    }
+
+    const targetUrl =
+      `https://xalman-image-filter.vercel.app/filter` +
+      `?image_url=${encodeURIComponent(image_url)}` +
+      `&filter_type=${encodeURIComponent(filter_type)}`;
+
+    const response = await fetch(targetUrl);
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        status: false,
+        message: "Image filter service failed."
+      });
+    }
+
+    res.setHeader(
+      "Content-Type",
+      response.headers.get("content-type") || "application/octet-stream"
+    );
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    return res.send(buffer);
+
+  } catch (error) {
+    console.error("Image filter error:", error.message);
+
+    return res.status(500).json({
+      status: false,
+      message: "Image filter failed."
+    });
+  }
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`SAAN API running on port ${PORT}`);
 });
